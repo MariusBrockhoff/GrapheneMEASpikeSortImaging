@@ -1,4 +1,5 @@
-# Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C
+## Content
+Codes and examples to publication "Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C"
 
 ## Prerequisites
 You will need the following to run our code:
