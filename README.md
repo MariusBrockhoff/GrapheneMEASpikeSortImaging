@@ -2,9 +2,7 @@
 
 ## Prerequisites
 You will need the following to run our code:
-* Python 3
-* pipenv
-* Git
+* Python 3.9
 * Weights and Biases (https://wandb.ai)
 
 ## Getting started
