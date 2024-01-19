@@ -2,6 +2,7 @@ import argparse
 
 from utils.run_class import *
 from config_files.config_file_DenseAutoencoder import *
+import tensorflow as tf
 
 # Display the start time of the code execution
 print("Start Time Code Exec: ", time.asctime(time.localtime(time.time())))

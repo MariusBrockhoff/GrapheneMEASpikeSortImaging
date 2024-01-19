@@ -494,7 +494,7 @@ class DEC(object):
         return y_pred
 
 
-def finetune_model(model, finetune_config, finetune_method, dataset, dataset_test):
+def finetune_model(model, finetune_config, finetune_method, dataset, dataset_test, benchmark=False):
     """
     Finetune a given model using DEC or IDEC method.
 
@@ -510,17 +510,21 @@ def finetune_model(model, finetune_config, finetune_method, dataset, dataset_tes
         y: The true labels.
     """
     # data prep --> combined train and test
+    y = None
     for step, batch in enumerate(dataset):
         if step == 0:
             x = batch[0]
-            y = batch[1]
+            if benchmark:
+                y = batch[1]
         else:
             x = np.concatenate((x, batch[0]), axis=0)
-            y = np.concatenate((y, batch[1]), axis=0)
+            if benchmark:
+                y = np.concatenate((y, batch[1]), axis=0)
 
     for stept, batcht in enumerate(dataset_test):
         x = np.concatenate((x, batcht[0]), axis=0)
-        y = np.concatenate((y, batcht[1]), axis=0)
+        if benchmark:
+            y = np.concatenate((y, batcht[1]), axis=0)
 
     if finetune_method == "DEC":
 
@@ -534,22 +538,23 @@ def finetune_model(model, finetune_config, finetune_method, dataset, dataset_tes
             ae_weights=finetune_config.PRETRAINED_SAVE_DIR)
 
         y_pred_finetuned = dec.clustering(x, y=y, tol=finetune_config.DEC_TOL,
-                                          maxiter=finetune_config.DEC_MAXITER,
-                                          update_interval=finetune_config.DEC_UPDATE_INTERVAL,
-                                          save_DEC_dir=finetune_config.DEC_SAVE_DIR)
+                                              maxiter=finetune_config.DEC_MAXITER,
+                                              update_interval=finetune_config.DEC_UPDATE_INTERVAL,
+                                              save_DEC_dir=finetune_config.DEC_SAVE_DIR)
+
 
     elif finetune_method == "IDEC":
 
         idec = IDEC(model=model, input_dim=x[0, :].shape, n_clusters=finetune_config.IDEC_N_CLUSTERS,
-                    batch_size=finetune_config.IDEC_BATCH_SIZE)  # TODO: All models
+                    batch_size=finetune_config.IDEC_BATCH_SIZE)
         idec.initialize_model(
             optimizer=tf.keras.optimizers.SGD(learning_rate=finetune_config.IDEC_LEARNING_RATE,
                                               momentum=finetune_config.IDEC_MOMENTUM),
             ae_weights=finetune_config.PRETRAINED_SAVE_DIR, gamma=finetune_config.IDEC_GAMMA)
 
         y_pred_finetuned = idec.clustering(x, y=y, tol=finetune_config.IDEC_TOL,
-                                           maxiter=finetune_config.IDEC_MAXITER,
-                                           update_interval=finetune_config.IDEC_UPDATE_INTERVAL,
-                                           save_IDEC_dir=finetune_config.IDEC_SAVE_DIR)
+                                               maxiter=finetune_config.IDEC_MAXITER,
+                                               update_interval=finetune_config.IDEC_UPDATE_INTERVAL,
+                                               save_IDEC_dir=finetune_config.IDEC_SAVE_DIR)
 
     return y_pred_finetuned, y

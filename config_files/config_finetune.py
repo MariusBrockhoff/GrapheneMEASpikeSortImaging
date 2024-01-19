@@ -75,3 +75,6 @@ class Config_Finetuning(object):
         self.IDEC_UPDATE_INTERVAL = 140  # Update interval for IDEC
         self.IDEC_SAVE_DIR = ("/rds/user/mb2315/hpc-work/Data/Saved_Models/" +
                               "IDEC_" + self.MODEL_TYPE + "_" + self.FILE_NAME + ".h5")  # IDEC model save directory
+
+        self.SAVE_PRED_DIR = "/rds/user/mb2315/hpc-work/Data/Saved_Models/" +
+                              "IDEC_" + self.MODEL_TYPE + "_" + self.FILE_NAME + ".h5")

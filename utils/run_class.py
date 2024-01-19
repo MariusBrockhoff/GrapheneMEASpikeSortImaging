@@ -6,14 +6,20 @@ from utils.model_predict import *
 from utils.clustering import *
 from utils.wandb_initializer import *
 from utils.finetune_models import *
+from utils.file_opener_raw_recording_data import *
+from utils.filter_signal import *
+from utils.spike_detection import *
+
 
 from config_files.config_finetune import *
 from config_files.config_pretraining import *
+from config_files.config_data_preprocessing import *
 
 
 class Run:
     """
-    Class for running the full Spike sorting pipeline.
+    Class for running the full Spike sorting pipeline on raw MEA recordings (MCS file format) (if benchmark=False)
+    or benchmarking the method on simulated spike files (if benchmark=True)
 
     This class integrates different components of the spike sorting pipeline, including
     data preparation, model initialization, pretraining, finetuning, prediction, clustering,
@@ -22,7 +28,6 @@ class Run:
     Attributes:
         model_config: Configuration for the model.
         data_path: Path to the data.
-        benchmark: Flag indicating whether to run benchmarking.
         pretrain_method: Method for pretraining the model.
         fine_tune_method: Method for finetuning the model.
         pretraining_config: Configuration for pretraining.
@@ -40,25 +45,28 @@ class Run:
         execute_pretrain(): Execute the pretraining phase.
         execute_finetune(): Execute the finetuning phase.
     """
+
     def __init__(self, model_config, data_path, benchmark, pretrain_method, fine_tune_method):
         self.model_config = model_config
         self.data_path = data_path
         self.benchmark = benchmark
         self.pretrain_method = pretrain_method
         self.fine_tune_method = fine_tune_method
+        self.data_preprocessing_config = Config_Preprocessing(self.data_path)
         self.pretraining_config = Config_Pretraining(self.data_path, self.model_config.MODEL_TYPE)
         self.finetune_config = Config_Finetuning(self.data_path, self.model_config.MODEL_TYPE)
 
-    """def extract_spikes(self, self.raw_file_name, self.data_path, self.is_big_file, self.filter_frequencies, self.filtering_method, self.order, self.save_path, self.min_TH, self.dat_points_pre_min, self.dat_points_post_min, self.max_TH, self.chunck_len, self.refrec_period, self.reject_channels, self.file_name, self.save):
-        recording_data, electrode_stream, fsample = file_opener_raw_recording_data(self.raw_file_name, self.data_path, self.is_big_file=False)
-        filtered_signal = filter_signal(recording_data, self.filter_frequencies, fsample, self.filtering_method="Butter_bandpass", self.order=2)
-        spike_file = spike_detection(filtered_signal, electrode_stream, fsample, self.save_path, self.min_TH, self.dat_points_pre_min=20, self.dat_points_post_min=44, self.max_TH=-30, self.chunck_len=300, self.refrec_period=0.002, self.reject_channels=[None], self.file_name=None, self.save=True):
-    """
+
+    def extract_spikes_from_raw_recording(self):
+        recording_data, electrode_stream, fsample = file_opener_raw_recording_data(self.data_preprocessing_config)
+        filtered_signal = filter_signal(recording_data, fsample, self.data_preprocessing_config)
+        spike_file = spike_detection(filtered_signal, electrode_stream, fsample, self.data_preprocessing_config)
 
     def prepare_data(self):
         print('---' * 30)
         print('PREPARING DATA...')
         dataset, dataset_test, self.pretraining_config, self.finetune_config = data_preparation(self.model_config,
+                                                                                                self.data_preprocessing_config,
                                                                                                 self.pretraining_config,
                                                                                                 self.finetune_config,
                                                                                                 self.benchmark)
@@ -86,17 +94,17 @@ class Run:
     def finetune(self, model, dataset, dataset_test):
         print('---' * 30)
         print('FINETUNING MODEL...')
-        y_finetuned = finetune_model(model=model, finetune_config=self.finetune_config,
+        y_finetuned, y_true = finetune_model(model=model, finetune_config=self.finetune_config,
                                      finetune_method=self.fine_tune_method,
-                                     dataset=dataset, dataset_test=dataset_test)
+                                     dataset=dataset, dataset_test=dataset_test, benchmark=self.benchmark)
 
-        return y_finetuned
+        return y_finetuned, y_true
 
     def predict(self, model, dataset, dataset_test):
-
         encoded_data, encoded_data_test, y_true, y_true_test = model_predict_latents(model=model,
                                                                                      dataset=dataset,
                                                                                      dataset_test=dataset_test)
+
         return encoded_data, encoded_data_test, y_true, y_true_test
 
     def cluster_data(self, encoded_data, encoded_data_test):
@@ -125,54 +133,55 @@ class Run:
 
     def execute_pretrain(self):
         if self.benchmark:
-            dataset, dataset_test = self.prepare_data()
-            train_acc_lst = []
-            test_acc_lst = []
-            for i in range(len(dataset)):
-                start_time = time.time()
-                self.initialize_wandb(self.pretrain_method)
-                model = self.initialize_model()
-                self.pretrain(model=model, dataset=dataset[i], dataset_test=dataset_test[i])
-                if self.pretrain_method == "reconstruction":
-                    encoded_data, encoded_data_test, y_true, y_true_test = self.predict(model=model,
-                                                                                        dataset=dataset[i],
-                                                                                        dataset_test=dataset_test[i])
-                    y_pred, n_clusters, y_pred_test, n_clusters_test = self.cluster_data(encoded_data=encoded_data,
-                                                                                         encoded_data_test=encoded_data_test)
-                    train_acc, test_acc = self.evaluate_spike_sorting(y_pred, y_true, y_pred_test, y_true_test)
-                    train_acc_lst.append(train_acc)
-                    test_acc_lst.append(test_acc)
-                    print("Train Acc: ", train_acc)
-                    print("Test Acc: ", test_acc)
-                end_time = time.time()
-                print("Time Run Execution: ", end_time - start_time)
-
-        else:
             start_time = time.time()
             self.initialize_wandb(self.pretrain_method)
             dataset, dataset_test = self.prepare_data()
             model = self.initialize_model()
             self.pretrain(model=model, dataset=dataset, dataset_test=dataset_test)
-            if self.pretrain_method == "reconstruction":
-                encoded_data, encoded_data_test, y_true, y_true_test = self.predict(model=model,
-                                                                                    dataset=dataset,
-                                                                                    dataset_test=dataset_test)
-                y_pred, n_clusters, y_pred_test, n_clusters_test = self.cluster_data(encoded_data=encoded_data,
-                                                                                     encoded_data_test=encoded_data_test)
+            encoded_data, encoded_data_test, y_true, y_true_test = self.predict(model=model,
+                                                                                dataset=dataset,
+                                                                                dataset_test=dataset_test)
+            y_pred, n_clusters, y_pred_test, n_clusters_test = self.cluster_data(encoded_data=encoded_data,
+                                                                                 encoded_data_test=encoded_data_test)
 
-                train_acc, test_acc = self.evaluate_spike_sorting(y_pred, y_true, y_pred_test, y_true_test)
-                print("Train Accuracy: ", train_acc)
-                print("Test Accuracy: ", test_acc)
+            train_acc, test_acc = self.evaluate_spike_sorting(y_pred, y_true, y_pred_test, y_true_test)
+            print("Train Accuracy: ", train_acc)
+            print("Test Accuracy: ", test_acc)
+            end_time = time.time()
+            print("Time Run Execution: ", end_time - start_time)
+        else:
+            start_time = time.time()
+            self.initialize_wandb(self.pretrain_method)
+            self.extract_spikes_from_raw_recording()
+            dataset, dataset_test = self.prepare_data()
+            model = self.initialize_model()
+            self.pretrain(model=model, dataset=dataset, dataset_test=dataset_test)
+            encoded_data, encoded_data_test, y_true, y_true_test = self.predict(model=model,
+                                                                                dataset=dataset,
+                                                                                dataset_test=dataset_test)
+            y_pred, n_clusters, y_pred_test, n_clusters_test = self.cluster_data(encoded_data=encoded_data,
+                                                                                 encoded_data_test=encoded_data_test)
             end_time = time.time()
             print("Time Run Execution: ", end_time - start_time)
 
     def execute_finetune(self):
-        start_time = time.time()
-        self.initialize_wandb(self.fine_tune_method)
-        dataset, dataset_test = self.prepare_data()
-        model = self.initialize_model()
-        y_pred_finetuned, y_true = self.finetune(model=model, dataset=dataset, dataset_test=dataset_test)
-        train_acc, _ = self.evaluate_spike_sorting(y_pred_finetuned, y_true)
-        print("Accuracy after Finetuning: ", train_acc)
-        end_time = time.time()
-        print("Time Finetuning Execution: ", end_time - start_time)
+        if self.benchmark:
+            start_time = time.time()
+            self.initialize_wandb(self.fine_tune_method)
+            dataset, dataset_test = self.prepare_data()
+            model = self.initialize_model()
+            y_pred_finetuned, y_true = self.finetune(model=model, dataset=dataset, dataset_test=dataset_test)
+            train_acc, _ = self.evaluate_spike_sorting(y_pred_finetuned, y_true)
+            print("Accuracy after Finetuning: ", train_acc)
+            end_time = time.time()
+            print("Time Finetuning Execution: ", end_time - start_time)
+        else:
+            start_time = time.time()
+            self.initialize_wandb(self.fine_tune_method)
+            dataset, dataset_test = self.prepare_data()
+            model = self.initialize_model()
+            y_pred_finetuned, y_true = self.finetune(model=model, dataset=dataset, dataset_test=dataset_test)
+
+            end_time = time.time()
+            print("Time Finetuning Execution: ", end_time - start_time)
+
