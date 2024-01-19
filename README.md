@@ -3,7 +3,7 @@ Codes and examples to publication "Graphene microelectrode arrays, four-dimensio
 
 ## Prerequisites
 You will need the following to run our code:
-* Python 3.9
+* Python 3.8
 * Weights and Biases (https://wandb.ai)
 
 ## Getting started
