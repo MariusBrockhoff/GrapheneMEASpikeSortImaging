@@ -7,12 +7,13 @@ You will need the following to run our code:
 * Weights and Biases (https://wandb.ai)
 
 ## Getting started
-### Launch the virtual environment
-1. To install all the necessary Python packages, use
-`pipenv install`
-2. To launch a virtual environment that contains all the necessary Python packages, run
-`pipenv shell`
-from the root directory. 
+Launch a virtual environment and install all required packages. We recommend usage of Conda (if not installed, use `pip install conda`). To setup the virtual environment and install all neccessary packages, follow these steps from the root directory.:
+1. To setup a conda envinronment (named myenv) using Python 3.8:
+`conda create -n myenv2 python=3.8`
+2. Activate the virtual environment:
+`conda activate myenv2`
+3. Install all required packages in the virtual envirnoment:
+`pip install -r requirements.txt`
 
 ## Usage 
 to be done
