@@ -1,23 +1,41 @@
-## Content
-Codes and examples to publication "Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C"
+# Deep Embedding based Spike Sorting
 
 ## Prerequisites
 You will need the following to run our code:
-* Python 3.8
-* Weights and Biases (https://wandb.ai)
+* Python 3
+* Conda
+* Weights and Biases (recommended, optional)
 
 ## Getting started
-Launch a virtual environment and install all required packages. We recommend usage of Conda (if not installed, use `pip install conda`). To setup the virtual environment and install all neccessary packages, follow these steps from the root directory.:
-1. To setup a conda envinronment (named myenv) using Python 3.8:
-  `conda create -n myenv python=3.8`
-2. Activate the virtual environment:
-  `conda activate myenv`
-3. Install all required packages in the virtual envirnoment:
-  `pip install -r requirements.txt`
+### Launch the virtual environment
+1. We recommend launching a virtual environment to install all the necessary Python packages. Multiple options are available, when using conda, use:
 
-## Usage 
-to be done
-## Citation
+    `conda create --name <env_name> --file requirements.txt`
+2. To launch the created virtual environment that contains all the necessary Python packages, run
+`conda activate env_name` from the root directory. 
+The virtual environment should be active. Make sure the correct versions of CUDA and cuDNN are installed.
 
-If you use this Repo, please cite the following:
-- Meng Lu, Ernestine Hui, Marius Brockhoff, Jakob Träuble, Ana Fernandez-Villegas, Oliver J Burton, Jacob Lamb, Edward Ward, Philippa J Hooper, Wadood Tadbier, Nino F Läubli, Stephan Hofmann, Clemens F Kaminski, Antonio Lombardo, Gabriele S Kaminski Schierle: "Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C" (2024)
+## Run DEC/IDEC spike sorting
+### For Benchmarking on simulated spike recordings
+For benchmarking of simulated spike shape recordings, spike sorting can be run in 'benchmark=True' mode.
+Here, it's assumed that Ground truth labels for each spike are available. Input are Python .pkl files with the isolated spike shape recordings (see publication below for details on the structure).
+The full spike sorting pipeline can be run on a sample dataset at path `sample_path` by calling:
+`python run.py --Pretrain_Method reconstruction --Finetune_Method DEC/IDEC --Model DenseAutoencoder --PathData sample_path --Benchmark`.
+Models and results are saved after pre-training. Therefore, pre-training or fine-tuning can also be called separately by running e.g.
+`python run.py --Pretrain_Method reconstruction --Model DenseAutoencoder --PathData sample_path --Benchmark` or 
+`python run.py --Finetune_Method DEC/IDEC --Model DenseAutoencoder --PathData sample_path --Benchmark`.
+
+### For new, raw MEA recording data
+Here, spike sorting shall be applied to classify all spikes from a raw MEA recording. Currently, we only support Multi Channel system acquisition systems (stored as .h5 files). The Raw recordings are filtered, spikes detected and pre-processed and subsequently all sorted at once (aim for high-level sorting).
+For a sample raw recording file at path `sample_raw`, run:
+`python run.py --Pretrain_Method reconstruction --Finetune_Method DEC/IDEC --Model DenseAutoencoder --PathData sample_raw`.
+
+
+### Important Notes
+All parameters can be adjusted in the configuration files. There are separate files for pre-training and fine-tuning. The config_file for data_preprocessing is only relevant when not benchmarking. By default, all training is tracked with Weight and Biases. If you do not wish to track the training, add `--wand False` when running.
+
+
+## Acknowledgements
+If you use PseudoSorter, please cite our [preprint](https://doi.org/10.1101/2024.02.22.581570):
+
+Meng Lu, Ernestine Hui, Marius Brockhoff, Jakob Träuble, Ana Fernandez-Villegas, Oliver J Burton, Jacob Lamb, Edward Ward, Philippa J Hooper, Wadood Tadbier, Nino F Läubli, Stephan Hofmann, Clemens F Kaminski, Antonio Lombardo, Gabriele S Kaminski Schierle: "Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C" (2024).

@@ -504,6 +504,7 @@ def finetune_model(model, finetune_config, finetune_method, dataset, dataset_tes
         finetune_method: The method to use for fine-tuning ('DEC' or 'IDEC').
         dataset: The training dataset.
         dataset_test: The test dataset.
+        benchmark: If run on simulated, benchmarking data. default: False
 
     Returns:
         y_pred_finetuned: The predicted labels after fine-tuning.
