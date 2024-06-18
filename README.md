@@ -36,6 +36,6 @@ All parameters can be adjusted in the configuration files. There are separate fi
 
 
 ## Acknowledgements
-If you use PseudoSorter, please cite our [preprint](https://doi.org/10.1101/2024.02.22.581570):
+If you use Deep Embedding based Spike Sorting, please cite our [preprint](https://doi.org/10.1101/2024.02.22.581570):
 
 Meng Lu, Ernestine Hui, Marius Brockhoff, Jakob Träuble, Ana Fernandez-Villegas, Oliver J Burton, Jacob Lamb, Edward Ward, Philippa J Hooper, Wadood Tadbier, Nino F Läubli, Stephan Hofmann, Clemens F Kaminski, Antonio Lombardo, Gabriele S Kaminski Schierle: "Graphene microelectrode arrays, four-dimensional structured illumination microscopy, and a machine learning-based spike sorting algorithm permit the analysis of ultrastructural neuronal changes in a model of Niemann-Pick disease type C" (2024).
