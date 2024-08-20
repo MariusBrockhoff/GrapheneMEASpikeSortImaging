@@ -30,7 +30,8 @@ Here, spike sorting shall be applied to classify all spikes from a raw MEA recor
 For a sample raw recording file at path `sample_raw`, run:
 `python run.py --Pretrain_Method reconstruction --Finetune_Method DEC/IDEC --Model DenseAutoencoder --PathData sample_raw`.
 
-
+### Example Data
+Example dataset for testing and use of this codebase is uploaded via Zenodo and can be found [here](https://doi.org/10.1101/2024.02.22.581570).
 ### Important Notes
 All parameters can be adjusted in the configuration files. There are separate files for pre-training and fine-tuning. The config_file for data_preprocessing is only relevant when not benchmarking. By default, all training is tracked with Weight and Biases. If you do not wish to track the training, add `--wand False` when running.
 
